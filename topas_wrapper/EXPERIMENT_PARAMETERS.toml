@@ -1,0 +1,52 @@
+experiment_name = "test_experiment"
+overwrite_existing_experiment = true
+
+number_of_threads = 1
+
+numbers_of_histories = [1,2,3,4]
+
+[particle_source]
+type = "Beam"
+component = "BeamPosition"
+beam_particle = "proton"
+beam_energy = [70, 130, 150, 170]
+beam_energy_unit = "MeV"
+beam_energy_spreads = [0.12]
+beam_position_distribution = "Gaussian"
+beam_position_cutoff_shape = "Ellipse"
+beam_position_cutoff_x =  10 
+beam_position_cutoff_x_units = "cm"
+beam_position_cutoff_y = 10
+beam_position_cutoff_y_units = "cm"
+beam_position_spread_x = 0.5
+beam_position_spread_x_units = "cm"
+beam_position_spread_y = 0.5
+beam_position_spread_y_units = "cm"
+beam_angular_distribution = "Gaussian"
+beam_angular_cutoff_x = 90
+beam_angular_cutoff_x_units = "deg"
+beam_angular_cutoff_y = 90
+beam_angular_cutoff_y_units = "deg"
+beam_angular_spread_x = 0.0032
+beam_angular_spread_x_units = "rad"
+beam_angular_spread_y = 0.0032
+beam_angular_spread_y_units = "rad"
+
+
+[physics_list]
+list_name = "Default"
+list_processes = "False" # Set true to dump list of active physics processes to console
+type = "Geant4_Modular"
+modules = ["g4em-standard_opt4", "g4h-phy_QGSP_BIC_HP", "g4decay", "g4ion-binarycascade", "g4h-elastic_HP", "g4stopping"]
+EM_range_min = 100
+EM_range_min_units = "eV"
+EM_range_max = 500
+EM_range_max_units = "MeV"
+
+[scoring]
+quantity = "EnergyDeposit"
+component = "Scintillator"
+only_include_particles_named = "proton"
+# x_bins = 78 #2*39
+# y_bins = 198 #2*99
+z_bins = 500 #2*250

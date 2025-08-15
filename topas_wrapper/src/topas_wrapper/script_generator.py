@@ -1,26 +1,10 @@
 import os
 import subprocess
-from pathlib import Path
-from typing import List, Dict
 import json
-from dataclasses import dataclass
-from pydantic import BaseModel
+from topas_wrapper.get_data import load_experiment_parameters, load_experiment_geometry_text
 
-RELATIVE_EXPERIMENT_GEOMETRY_PATH = "../../EXPERIMENT_GEOMETRY.txt"
-RELATIVE_EXPERIMENT_PARAMETER_PATH = "../../EXPERIMENT_PARAMETERS.json"
-
-
-@dataclass
-class ExperimentParameters(BaseModel):
-    number_of_threads: int
-    numbers_of_histories: List[int]
-    a_float: float
-
-    @classmethod
-    def from_json(cls, filepath):
-        json_string = Path(filepath).read_text()
-        return cls.model_validate_json(json_string)
-
+def generate_file_structure():
+    return
 
 def generate_number_of_threads_text(number_of_threads: int) -> str:
     if number_of_threads is None:
@@ -31,30 +15,14 @@ def generate_number_of_threads_text(number_of_threads: int) -> str:
     return number_of_threads_text
 
 
-def locate_experiment_file(relative_filepath: str) -> Path:
-    mod_path = Path(__file__).parent
-    absolute_path = (mod_path / relative_filepath).resolve()
-    if not absolute_path.exists():
-        raise FileNotFoundError(f"No file exists at location -> {absolute_path}.")
-    return absolute_path
+def main():
+    experiment_parameters = load_experiment_parameters()
+    print(experiment_parameters)
+    print(experiment_parameters.numbers_of_histories)
+    return
 
-
-def load_experiment_geometry_text() -> List[str]:
-    try:
-        experiment_geometry_path = locate_experiment_file(RELATIVE_EXPERIMENT_GEOMETRY_PATH)
-    except FileNotFoundError as e:
-        raise FileNotFoundError(f"EXPERIMENT_GEOMETRY.txt does not exist in the expected location. \n{e} \nRefer to the original file structure.")
-    geometry_lines = experiment_geometry_path.read_text().splitlines()    
-    return geometry_lines
-
-
-def load_experiment_parameters() -> ExperimentParameters:
-    try:
-        experiment_parameters_path = locate_experiment_file(RELATIVE_EXPERIMENT_PARAMETER_PATH)
-    except FileNotFoundError as e:
-        raise FileNotFoundError(f"EXPERIMENT_PARAMETER.txt does not exist in the expected location. \n{e} \nRefer to the original file structure.")
-    experiment_parameters = ExperimentParameters.from_json(experiment_parameters_path)
-    return experiment_parameters
+if __name__ == "__main__":
+    main()
 
 
 # # Define the numbers of histories
@@ -130,13 +98,3 @@ def load_experiment_parameters() -> ExperimentParameters:
 #         for row in results:
 #             f.write(','.join(str(x) for x in row) + '\n')
 
-
-def main():
-    # simulation_script_lines = []
-    experiment_parameters = load_experiment_parameters()
-    print(experiment_parameters)
-    print(experiment_parameters.numbers_of_histories)
-    return
-
-if __name__ == "__main__":
-    main()

@@ -78,7 +78,10 @@ d:Ge/BeamPosition/RotX = 0. deg
 d:Ge/BeamPosition/RotY = 0. deg
 d:Ge/BeamPosition/RotZ = 0. deg
 
-# Particle source
+## GEOMETRY ###############################
+
+############################### Particle source ##
+
 s:So/ProtonBeam/Type = "Beam" # Beam, Isotropic, Emittance or PhaseSpace
 s:So/ProtonBeam/Component = "BeamPosition"
 s:So/ProtonBeam/BeamParticle = "proton"
@@ -96,7 +99,9 @@ d:So/ProtonBeam/BeamAngularCutoffY = 90. deg
 d:So/ProtonBeam/BeamAngularSpreadX = 0.0032 rad
 d:So/ProtonBeam/BeamAngularSpreadY = 0.0032 rad
 
-## GEOMETRY ###############################
+## Particle source ###############################
+
+
 
 ############################### PHYSICS_LISTS ##
 
