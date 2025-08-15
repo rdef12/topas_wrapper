@@ -24,8 +24,17 @@ def create_file_structure(experiment_name: str, relative_filepath: str, overwrit
     analysis_folder.mkdir(exist_ok=False)
     return scripts_folder, data_folder, analysis_folder
 
+
 def create_filename(beam_energy: float, beam_energy_units: EnergyUnit, number_of_histories: int):
     beam_energy_string = f"{beam_energy:.2f}"
     beam_energy_string = beam_energy_string.replace('.', 'p')
     filename = f"beam_energy_{beam_energy_string}_{beam_energy_units.value}_number_of_histories_{number_of_histories}.txt"
     return filename
+
+
+def create_output_filepath(data_folder: str, beam_energy: float, beam_energy_units: EnergyUnit, number_of_histories: int):
+    beam_energy_string = f"{beam_energy:.2f}"
+    beam_energy_string = beam_energy_string.replace('.', 'p')
+    filename = f"beam_energy_{beam_energy_string}_{beam_energy_units.value}_number_of_histories_{number_of_histories}"
+    output_filepath = (data_folder / filename).resolve()
+    return output_filepath

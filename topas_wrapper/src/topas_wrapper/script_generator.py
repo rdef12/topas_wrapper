@@ -6,8 +6,9 @@ from pathlib import Path
 from itertools import product
 from topas_wrapper.get_data import locate_experiment_config_file
 from topas_wrapper.get_data import load_experiment_parameters, ParticleSource, ExperimentPhysicsList, Scorer, ExperimentParameters
-from topas_wrapper.create_file_structure import create_file_structure, create_filename
+from topas_wrapper.create_file_structure import create_file_structure, create_filename, create_output_filepath
 from topas_wrapper.file_structure import FileStructure
+from topas_wrapper.input_constants import EnergyUnit
 
 
 def generate_number_of_threads_text(number_of_threads: int) -> List[str]:
@@ -76,7 +77,7 @@ def generate_physics_lists_text(physics_list: ExperimentPhysicsList) -> List[str
     return physics_list_text
 
 
-def generate_scoring_text(scorer: Scorer) -> List[str]:
+def generate_scoring_text(scorer: Scorer, data_folder: Path, beam_energy: float, beam_energy_units: EnergyUnit, number_of_histories: int) -> List[str]:
     scorer_text = [
         '!!!scorer-start!!!'
         f's:Sc/Scorer/Quantity = "{scorer.quantity.value}"',
@@ -93,10 +94,13 @@ def generate_scoring_text(scorer: Scorer) -> List[str]:
         scorer_text.append(f'i:Sc/Scorer/YBins = {scorer.y_bins}')
     if scorer.z_bins is not None:
         scorer_text.append(f'i:Sc/Scorer/ZBins = {scorer.z_bins}')
+    output_filepath = create_output_filepath(data_folder, beam_energy, beam_energy_units, number_of_histories)
+    scorer_text.append(f's:Sc/Scorer/OutputFile = "{output_filepath}"')
     scorer_text.append('!!!scorer-end!!!')
     return scorer_text
 
-def generate_script(experiment_parameters: ExperimentParameters, energy_index: int, number_of_histories_index: int) -> List[str]:
+
+def generate_script(experiment_parameters: ExperimentParameters, energy_index: int, number_of_histories_index: int, data_folder: Path) -> List[str]:
     script = []
 
     number_of_threads_text = generate_number_of_threads_text(experiment_parameters.number_of_threads)
@@ -117,7 +121,7 @@ def generate_script(experiment_parameters: ExperimentParameters, energy_index: i
     physics_lists_text = generate_physics_lists_text(experiment_parameters.physics_list)
     script += physics_lists_text
 
-    scoring_text = generate_scoring_text(experiment_parameters.scorer)
+    scoring_text = generate_scoring_text(experiment_parameters.scorer, data_folder, beam_energy, experiment_parameters.particle_source.beam_energy_unit, number_of_histories)
     script += scoring_text
 
     return script
@@ -144,30 +148,18 @@ def generate_scripts(experiment_parameters: ExperimentParameters):
         beam_energy_units = experiment_parameters.particle_source.beam_energy_unit
         number_of_histories = numbers_of_histories[number_of_histories_index]
 
-        script = generate_script(experiment_parameters, beam_energy_index, number_of_histories_index)
+        script = generate_script(experiment_parameters, beam_energy_index, number_of_histories_index, data_folder)
         filename = create_filename(beam_energy, beam_energy_units, number_of_histories)
         write_script_to_file(script, scripts_folder, filename)
-    return
-
-
-
+    print("Scripts generation successful.")
+    return 
 
 def main():
-    # experiment_parameters = load_experiment_parameters()
-    # print(experiment_parameters)
-    # print(experiment_parameters.numbers_of_histories)
-    # create_file_structure(experiment_parameters.experiment_name,
-    #                         FileStructure.EXPERIMENTS.value,
-    #                         overwrite=experiment_parameters.overwrite_existing_experiment)
     experiment_parameters = load_experiment_parameters()
     generate_scripts(experiment_parameters)
-    
-    return
 
-if __name__ == "__main__":
+if __name__=="__main__":
     main()
-
-
 # # Define the numbers of histories
 # NUMBERS_OF_HISTORIES = [8000, 10000, 16000]
 # BASE_SCRIPT_PATH = 'convergence_testing_150MeV_slices.txt'
