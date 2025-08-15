@@ -1,27 +1,166 @@
 import os
 import subprocess
 import json
-from topas_wrapper.get_data import load_experiment_parameters, load_experiment_geometry_text
-from topas_wrapper.create_file_structure import create_file_structure
+from typing import List
+from pathlib import Path
+from itertools import product
+from topas_wrapper.get_data import locate_experiment_config_file
+from topas_wrapper.get_data import load_experiment_parameters, ParticleSource, ExperimentPhysicsList, Scorer, ExperimentParameters
+from topas_wrapper.create_file_structure import create_file_structure, create_filename
 from topas_wrapper.file_structure import FileStructure
 
-def generate_number_of_threads_text(number_of_threads: int) -> str:
-    number_of_threads_text = f"i:Ts/NumberOfThreads = {number_of_threads}"
-    return number_of_threads_text
 
-def generate_seed_number_text(seed_number: int) -> str:
+def generate_number_of_threads_text(number_of_threads: int) -> List[str]:
+    number_of_threads_text = f"i:Ts/NumberOfThreads = {number_of_threads}"
+    return [number_of_threads_text]
+
+
+def generate_seed_number_text(seed_number: int) -> List[str]:
     if seed_number == 0:
-        return 'b:Ts/SeedFromTime = "True"'
-    return f'i:Ts/Seed = {seed_number}'
+        return ['b:Ts/SeedFromTime = "True"']
+    return [f'i:Ts/Seed = {seed_number}']
+
+
+def generate_number_of_histories_text(number_of_histories: int, particle_source_component: str) -> List[str]:
+    return [f"i:So/{particle_source_component}/NumberOfHistoriesInRun = {number_of_histories}"]
+
+
+def load_experiment_geometry_text() -> List[str]:
+    try:
+        experiment_geometry_path = locate_experiment_config_file(FileStructure.GEOMETRY.value)
+    except FileNotFoundError as e:
+        raise FileNotFoundError(f"EXPERIMENT_GEOMETRY.txt does not exist in the expected location. \n{e} \nRefer to the original file structure.")
+    geometry_lines = experiment_geometry_path.read_text().splitlines()    
+    return geometry_lines
+
+
+def generate_particle_source_text(particle_source: ParticleSource, beam_energy: float, beam_energy_spread: float) -> List[str]:
+    component = particle_source.component
+    particle_source_text = [
+        "!!!particle-source-start!!!",
+        f's:So/{component}/Type = "{particle_source.type.value}"',
+        f's:So/{component}/Component = "{particle_source.component}"',
+        f's:So/{component}/BeamParticle = "{particle_source.beam_particle.value}"',
+        f'd:So/{component}/BeamEnergy = {beam_energy:.2f} {particle_source.beam_energy_unit.value}',
+        f'u:So/{component}/BeamEnergySpread = {beam_energy_spread:.2f}',
+        f's:So/{component}/BeamPositionDistribution = "{particle_source.beam_position_distribution.value}"',
+        f's:So/{component}/BeamPositionCutoffShape = "{particle_source.beam_position_cutoff_shape.value}"',
+        f'd:So/{component}/BeamPositionCutoffX = {particle_source.beam_position_cutoff_x} {particle_source.beam_position_cutoff_x_units.value}',
+        f'd:So/{component}/BeamPositionCutoffY = {particle_source.beam_position_cutoff_y} {particle_source.beam_position_cutoff_y_units.value}',
+        f'd:So/{component}/BeamPositionSpreadX = {particle_source.beam_position_spread_x} {particle_source.beam_position_spread_x_units.value}',
+        f'd:So/{component}/BeamPositionSpreadY = {particle_source.beam_position_spread_y} {particle_source.beam_position_spread_y_units.value}',
+        f's:So/{component}/BeamAngularDistribution = "{particle_source.beam_angular_distribution.value}"',
+        f'd:So/{component}/BeamAngularCutoffX = {particle_source.beam_angular_cutoff_x} {particle_source.beam_angular_cutoff_x_units.value}',
+        f'd:So/{component}/BeamAngularCutoffY = {particle_source.beam_angular_cutoff_y} {particle_source.beam_angular_cutoff_y_units.value}',
+        f'd:So/{component}/BeamAngularSpreadX = {particle_source.beam_angular_spread_x} {particle_source.beam_angular_spread_x_units.value}',
+        f'd:So/{component}/BeamAngularSpreadY = {particle_source.beam_angular_spread_y} {particle_source.beam_angular_spread_y_units.value}',
+        "!!!particle-source-end!!!"
+    ]
+    return particle_source_text
+
+
+def generate_physics_lists_text(physics_list: ExperimentPhysicsList) -> List[str]:
+    modules = physics_list.modules
+    number_of_modules = len(modules)
+    string_of_modules = " ".join(f'"{module}"' for module in modules)
+    physics_list_text = [
+        '!!!physics-lists-start!!!',
+        f's:Ph/ListName = "{physics_list.list_name}"',
+        f'b:Ph/ListProcesses = "{physics_list.list_processes}"',
+        f's:Ph/{physics_list.list_name}/Type = "{physics_list.type}"',
+        f'sv:Ph/{physics_list.list_name}/Modules = {number_of_modules} {string_of_modules}',
+        f'd:Ph/{physics_list.list_name}/EMRangeMin = {physics_list.EM_range_min} {physics_list.EM_range_min_units.value}',
+        f'd:Ph/{physics_list.list_name}/EMRangeMax = {physics_list.EM_range_max} {physics_list.EM_range_max_units.value}',
+        '!!!physics-lists-end!!!'
+    ]
+    return physics_list_text
+
+
+def generate_scoring_text(scorer: Scorer) -> List[str]:
+    scorer_text = [
+        '!!!scorer-start!!!'
+        f's:Sc/Scorer/Quantity = "{scorer.quantity.value}"',
+        f's:Sc/Scorer/Component = "{scorer.component}"',
+        f'b:Sc/Scorer/OutputToConsole = "False"'
+    ]
+    if scorer.only_include_particles_named is not None:
+        number_of_particles_to_include = len(scorer.only_include_particles_named)
+        string_of_particles = " ".join(f'"{particle.value}"' for particle in scorer.only_include_particles_named)
+        scorer_text.append(f'sv:Sc/Scorer/OnlyIncludeParticlesNamed = {number_of_particles_to_include} {string_of_particles}')
+    if scorer.x_bins is not None:
+        scorer_text.append(f'i:Sc/Scorer/XBins = {scorer.x_bins}')
+    if scorer.y_bins is not None:
+        scorer_text.append(f'i:Sc/Scorer/YBins = {scorer.y_bins}')
+    if scorer.z_bins is not None:
+        scorer_text.append(f'i:Sc/Scorer/ZBins = {scorer.z_bins}')
+    scorer_text.append('!!!scorer-end!!!')
+    return scorer_text
+
+def generate_script(experiment_parameters: ExperimentParameters, energy_index: int, number_of_histories_index: int) -> List[str]:
+    script = []
+
+    number_of_threads_text = generate_number_of_threads_text(experiment_parameters.number_of_threads)
+    script += number_of_threads_text
+
+    number_of_histories = experiment_parameters.numbers_of_histories[number_of_histories_index]
+    number_of_histories_text = generate_number_of_histories_text(number_of_histories, experiment_parameters.particle_source.component)
+    script += number_of_histories_text
+
+    geometry_text = load_experiment_geometry_text()
+    script += geometry_text
+
+    beam_energy = experiment_parameters.particle_source.beam_energy[energy_index]
+    beam_energy_spread = experiment_parameters.particle_source.beam_energy_spreads[energy_index]
+    particle_source_text = generate_particle_source_text(experiment_parameters.particle_source, beam_energy, beam_energy_spread)
+    script += particle_source_text
+
+    physics_lists_text = generate_physics_lists_text(experiment_parameters.physics_list)
+    script += physics_lists_text
+
+    scoring_text = generate_scoring_text(experiment_parameters.scorer)
+    script += scoring_text
+
+    return script
+
+def write_script_to_file(script: List[int], script_folder_path: Path, filename: str):
+    filepath = (script_folder_path / filename).resolve()
+    with filepath.open("w") as f:
+        for line in script:
+            f.write(f"{line}\n")
+
+
+def generate_scripts(experiment_parameters: ExperimentParameters):
+    scripts_folder, data_folder, analysis_folder = create_file_structure(experiment_parameters.experiment_name,
+                                                                         FileStructure.EXPERIMENTS.value,
+                                                                         overwrite=experiment_parameters.overwrite_existing_experiment)
+    beam_energies = experiment_parameters.particle_source.beam_energy
+    numbers_of_histories = experiment_parameters.numbers_of_histories
+    combination_of_indices = [(i, j) for i, j in product(range(len(beam_energies)), range(len(numbers_of_histories)))]
+    for index_combination in combination_of_indices:
+        beam_energy_index = index_combination[0]
+        number_of_histories_index = index_combination[1]
+
+        beam_energy = beam_energies[beam_energy_index]
+        beam_energy_units = experiment_parameters.particle_source.beam_energy_unit
+        number_of_histories = numbers_of_histories[number_of_histories_index]
+
+        script = generate_script(experiment_parameters, beam_energy_index, number_of_histories_index)
+        filename = create_filename(beam_energy, beam_energy_units, number_of_histories)
+        write_script_to_file(script, scripts_folder, filename)
+    return
+
+
 
 
 def main():
+    # experiment_parameters = load_experiment_parameters()
+    # print(experiment_parameters)
+    # print(experiment_parameters.numbers_of_histories)
+    # create_file_structure(experiment_parameters.experiment_name,
+    #                         FileStructure.EXPERIMENTS.value,
+    #                         overwrite=experiment_parameters.overwrite_existing_experiment)
     experiment_parameters = load_experiment_parameters()
-    print(experiment_parameters)
-    print(experiment_parameters.numbers_of_histories)
-    create_file_structure(experiment_parameters.experiment_name,
-                            FileStructure.EXPERIMENTS.value,
-                            overwrite=experiment_parameters.overwrite_existing_experiment)
+    generate_scripts(experiment_parameters)
     
     return
 

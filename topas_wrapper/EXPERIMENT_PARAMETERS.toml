@@ -48,7 +48,7 @@ EM_range_max_units = "MeV"
 [scorer]
 quantity = "EnergyDeposit"
 component = "Scintillator"
-only_include_particles_named = "proton"
+only_include_particles_named = ["proton"]
 # x_bins = 78 #2*39
 # y_bins = 198 #2*99
 z_bins = 500 #2*250

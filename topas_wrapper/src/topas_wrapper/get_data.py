@@ -83,7 +83,7 @@ class ExperimentPhysicsList(BaseModel):
 class Scorer(BaseModel):
     quantity: ScorerQuantity
     component: str #As named in geometry
-    only_include_particles_named: ParticleType | None
+    only_include_particles_named: List[ParticleType] | None
     x_bins: Optional[int] = Field(None, gt=0)
     y_bins: Optional[int] = Field(None, gt=0)
     z_bins: Optional[int] = Field(None, gt=0)
@@ -125,15 +125,6 @@ def locate_experiment_config_file(relative_filepath: str) -> Path:
     if not absolute_path.exists():
         raise FileNotFoundError(f"No file exists at location -> {absolute_path}.")
     return absolute_path
-
-
-def load_experiment_geometry_text() -> List[str]:
-    try:
-        experiment_geometry_path = locate_experiment_config_file(FileStructure.GEOMETRY.value)
-    except FileNotFoundError as e:
-        raise FileNotFoundError(f"EXPERIMENT_GEOMETRY.txt does not exist in the expected location. \n{e} \nRefer to the original file structure.")
-    geometry_lines = experiment_geometry_path.read_text().splitlines()    
-    return geometry_lines
 
 
 def load_experiment_parameters() -> ExperimentParameters:

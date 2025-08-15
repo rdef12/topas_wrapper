@@ -1,9 +1,10 @@
 from pathlib import Path
 import shutil
+from topas_wrapper.input_constants import EnergyUnit
 
 EXPERIMENTS_FOLDER_LOCATION = "../../experiments"
 
-def create_file_structure(experiment_name: str, relative_filepath: str, overwrite: bool=False) -> Path:
+def create_file_structure(experiment_name: str, relative_filepath: str, overwrite: bool=False):
     mod_path = Path(__file__).parent
     experiment_folder = (mod_path / relative_filepath / experiment_name).resolve()
     if experiment_folder.exists() and not overwrite:
@@ -11,7 +12,7 @@ def create_file_structure(experiment_name: str, relative_filepath: str, overwrit
     if experiment_folder.exists() and not experiment_folder.is_dir():
         raise FileExistsError(f"You have an unexpected file with the experiment name -> {experiment_name} at location -> {experiment_folder}. \nPlease remove it.")
     if experiment_folder.exists():
-        # print(experiment_folder)
+        print(f"Overwriting -> {experiment_folder}")
         shutil.rmtree(experiment_folder)
 
     scripts_folder = (experiment_folder / "scripts").resolve()
@@ -22,3 +23,9 @@ def create_file_structure(experiment_name: str, relative_filepath: str, overwrit
     data_folder.mkdir(exist_ok=False)
     analysis_folder.mkdir(exist_ok=False)
     return scripts_folder, data_folder, analysis_folder
+
+def create_filename(beam_energy: float, beam_energy_units: EnergyUnit, number_of_histories: int):
+    beam_energy_string = f"{beam_energy:.2f}"
+    beam_energy_string = beam_energy_string.replace('.', 'p')
+    filename = f"beam_energy_{beam_energy_string}_{beam_energy_units.value}_number_of_histories_{number_of_histories}.txt"
+    return filename
