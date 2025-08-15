@@ -6,18 +6,19 @@ from topas_wrapper.create_file_structure import create_file_structure
 from topas_wrapper.file_structure import FileStructure
 
 def generate_number_of_threads_text(number_of_threads: int) -> str:
-    if number_of_threads is None:
-        return
-    if type(number_of_threads) is not int:
-        raise Exception(f"Number of threads must be an integer. You have input {number_of_threads} which is of type {type(number_of_threads)}.")
     number_of_threads_text = f"i:Ts/NumberOfThreads = {number_of_threads}"
     return number_of_threads_text
+
+def generate_seed_number_text(seed_number: int) -> str:
+    if seed_number == 0:
+        return 'b:Ts/SeedFromTime = "True"'
+    return f'i:Ts/Seed = {seed_number}'
 
 
 def main():
     experiment_parameters = load_experiment_parameters()
-    # print(experiment_parameters)
-    # print(experiment_parameters.numbers_of_histories)
+    print(experiment_parameters)
+    print(experiment_parameters.numbers_of_histories)
     create_file_structure(experiment_parameters.experiment_name,
                             FileStructure.EXPERIMENTS.value,
                             overwrite=experiment_parameters.overwrite_existing_experiment)

@@ -1,7 +1,7 @@
 from pathlib import Path
-from typing import List, Type
+from typing import List, Type, Optional
 from dataclasses import dataclass
-from pydantic import BaseModel, model_validator, ValidationError
+from pydantic import BaseModel, model_validator, ValidationError, Field, field_validator
 import tomli
 from topas_wrapper.file_structure import FileStructure
 
@@ -19,7 +19,7 @@ from topas_wrapper.input_constants import (EnergyUnit,
                                            ParticleType)
 
 @dataclass
-class ParticleSource(BaseModel):
+class ParticleSource(BaseModel): #TODO Add limits on values of energy etc
     component: str #Input to match geometry source
 
     type: ParticleSourceType    
@@ -61,6 +61,12 @@ class ParticleSource(BaseModel):
                 raise ValueError(f"beam_energy_spread must have the same number of entries as beam_energies or have only one entry.\
                                  \nThe inputted entries are beam_energies: {energies} and beam_energy_spreads {spreads}.")
         return values
+    
+    @field_validator("beam_energy", "beam_energy_spreads")
+    def all_non_negative(cls, values):
+        if any(i < 0 for i in values):
+            raise ValueError("All beam energies and spreads must be zero or greater")
+        return values
 
 @dataclass
 class ExperimentPhysicsList(BaseModel):
@@ -78,20 +84,22 @@ class Scorer(BaseModel):
     quantity: ScorerQuantity
     component: str #As named in geometry
     only_include_particles_named: ParticleType | None
-    x_bins: int | None
-    y_bins: int | None
-    z_bins: int | None
+    x_bins: Optional[int] = Field(None, gt=0)
+    y_bins: Optional[int] = Field(None, gt=0)
+    z_bins: Optional[int] = Field(None, gt=0)
 
 @dataclass
 class ExperimentParameters(BaseModel):
     experiment_name: str
     overwrite_existing_experiment: bool
 
-    number_of_threads: int
+    number_of_threads: int = Field(..., ge=0)
+    seed_number: int = Field(..., ge=0)
     numbers_of_histories: List[int]
 
     particle_source: ParticleSource
     physics_list: ExperimentPhysicsList
+    scorer: Scorer
 
     @classmethod
     def from_json(cls, filepath: Path):
@@ -103,6 +111,12 @@ class ExperimentParameters(BaseModel):
         with open(filepath, 'rb') as f:
             data = tomli.load(f)
             return cls.model_validate(data)
+    
+    @field_validator("numbers_of_histories")
+    def all_non_negative(cls, values):
+        if any(i < 0 for i in values):
+            raise ValueError("All numbers of histories must be zero or greater")
+        return values
 
 
 def locate_experiment_config_file(relative_filepath: str) -> Path:

@@ -1,0 +1,70 @@
+%%%materials-start%%%
+# Air
+sv:Ma/Air/Components = 4 "Carbon" "Nitrogen" "Oxygen" "Argon"
+uv:Ma/Air/Fractions = 4 0.000124 0.755268 0.231781 0.012827
+d:Ma/Air/Density = 1.20484 mg/cm3
+d:Ma/Air/MeanExcitationEnergy = 85.7 eV
+s:Ma/Air/DefaultColor = "lightblue"
+
+# Low Density Polythene (LDPE)
+sv:Ma/LDPE/Components = 2 "Carbon" "Hydrogen"
+uv:Ma/LDPE/Fractions = 2 0.856289 0.143711
+d:Ma/LDPE/Density = 0.94 g/cm3
+
+# PVT
+sv:Ma/PVT/Components = 2 "Carbon" "Hydrogen"
+uv:Ma/PVT/Fractions = 2 0.915000 0.085000
+d:Ma/PVT/Density = 	1.035 g/cm3
+d:Ma/PVT/MeanExcitationEnergy = 64.7 eV
+s:Ma/PVT/DefaultColor = "blue"
+%%%materials-end%%%
+
+%%%geometry-start%%%
+ # World
+s:Ge/World/Type = "TsBox"
+s:Ge/World/Material = "Air"
+d:Ge/World/HLX = 5. m # Half Length
+d:Ge/World/HLY = 5. m
+d:Ge/World/HLZ = 5. m
+d:Ge/World/TransX = 0. m
+d:Ge/World/TransY = 0. m
+d:Ge/World/TransZ = 0. m
+d:Ge/World/RotX = 0. deg
+d:Ge/World/RotY = 0. deg
+d:Ge/World/RotZ = 0. deg
+
+# Light cover
+s:Ge/LightCover/Type = "TsBox"
+s:Ge/LightCover/Parent = "World"
+s:Ge/LightCover/Material = "LDPE"
+d:Ge/LightCover/HLX = 100 mm
+d:Ge/LightCover/HLY = 300 mm
+d:Ge/LightCover/HLZ = 2.5 mm
+d:Ge/LightCover/TransX = Ge/Scintillator/HLX mm
+d:Ge/LightCover/TransY = Ge/Scintillator/HLY mm
+d:Ge/LightCover/TransZ = -32.5 mm
+
+# Scintillator
+s:Ge/Scintillator/Type = "TsBox"
+s:Ge/Scintillator/Parent = "World"
+s:Ge/Scintillator/Material = "PVT"
+d:Ge/Scintillator/HLX = 19.5 mm # Half Length
+d:Ge/Scintillator/HLY = 49.5 mm # Half length
+d:Ge/Scintillator/HLZ = 125. mm
+d:Ge/Scintillator/TransX = Ge/Scintillator/HLX mm
+d:Ge/Scintillator/TransY = Ge/Scintillator/HLY mm
+d:Ge/Scintillator/TransZ = Ge/Scintillator/HLZ mm
+#i:Ge/Scintillator/XBins = 39 # 2 * Ge/Scintillator/HLX
+#i:Ge/Scintillator/YBins = 99 # 2 * Ge/Scintillator/HLY
+#i:Ge/Scintillator/ZBins = 250 # 2 * Ge/Scintillator/HLZ
+
+# Beam position
+s:Ge/BeamPosition/Parent = "World"
+s:Ge/BeamPosition/Type = "Group"
+d:Ge/BeamPosition/TransX = Ge/Scintillator/HLX mm
+d:Ge/BeamPosition/TransY = Ge/Scintillator/HLY mm
+d:Ge/BeamPosition/TransZ =  -0.82 m
+d:Ge/BeamPosition/RotX = 0. deg
+d:Ge/BeamPosition/RotY = 0. deg
+d:Ge/BeamPosition/RotZ = 0. deg
+%%%geometry-end%%%

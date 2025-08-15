@@ -1,6 +1,8 @@
 experiment_name = "test_experiment"
 overwrite_existing_experiment = true
 
+seed_number = 1 # 0 for SeedFromTime
+
 number_of_threads = 1
 
 numbers_of_histories = [1,2,3,4]
@@ -43,7 +45,7 @@ EM_range_min_units = "eV"
 EM_range_max = 500
 EM_range_max_units = "MeV"
 
-[scoring]
+[scorer]
 quantity = "EnergyDeposit"
 component = "Scintillator"
 only_include_particles_named = "proton"
