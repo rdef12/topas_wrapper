@@ -1,0 +1,21 @@
+[project]
+name = "topas-wrapper"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "rdef12",email = "robindefreitas123@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "pathlib (>=1.0.1,<2.0.0)",
+    "pydantic (>=2.11.7,<3.0.0)"
+]
+
+[tool.poetry]
+packages = [{include = "topas_wrapper", from = "src"}]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

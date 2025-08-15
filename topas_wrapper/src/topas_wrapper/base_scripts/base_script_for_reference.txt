@@ -1,0 +1,122 @@
+#i:Ts/NumberOfThreads = 0
+
+b:Ts/SeedFromTime = "True"
+
+i:So/ProtonBeam/NumberOfHistoriesInRun = 10000
+
+############################### Materials ##
+
+# Air
+sv:Ma/Air/Components = 4 "Carbon" "Nitrogen" "Oxygen" "Argon"
+uv:Ma/Air/Fractions = 4 0.000124 0.755268 0.231781 0.012827
+d:Ma/Air/Density = 1.20484 mg/cm3
+d:Ma/Air/MeanExcitationEnergy = 85.7 eV
+s:Ma/Air/DefaultColor = "lightblue"
+
+# Low Density Polythene (LDPE)
+sv:Ma/LDPE/Components = 2 "Carbon" "Hydrogen"
+uv:Ma/LDPE/Fractions = 2 0.856289 0.143711
+d:Ma/LDPE/Density = 0.94 g/cm3
+
+# PVT
+sv:Ma/PVT/Components = 2 "Carbon" "Hydrogen"
+uv:Ma/PVT/Fractions = 2 0.915000 0.085000
+d:Ma/PVT/Density = 	1.035 g/cm3
+d:Ma/PVT/MeanExcitationEnergy = 64.7 eV
+s:Ma/PVT/DefaultColor = "blue"
+
+## Materials ###############################
+
+############################### GEOMETRY ##
+ # World
+s:Ge/World/Type = "TsBox"
+s:Ge/World/Material = "Air"
+d:Ge/World/HLX = 5. m # Half Length
+d:Ge/World/HLY = 5. m
+d:Ge/World/HLZ = 5. m
+d:Ge/World/TransX = 0. m
+d:Ge/World/TransY = 0. m
+d:Ge/World/TransZ = 0. m
+d:Ge/World/RotX = 0. deg
+d:Ge/World/RotY = 0. deg
+d:Ge/World/RotZ = 0. deg
+
+# Light cover
+s:Ge/LightCover/Type = "TsBox"
+s:Ge/LightCover/Parent = "World"
+s:Ge/LightCover/Material = "LDPE"
+d:Ge/LightCover/HLX = 100 mm
+d:Ge/LightCover/HLY = 300 mm
+d:Ge/LightCover/HLZ = 2.5 mm
+d:Ge/LightCover/TransX = Ge/Scintillator/HLX mm
+d:Ge/LightCover/TransY = Ge/Scintillator/HLY mm
+d:Ge/LightCover/TransZ = -32.5 mm
+
+
+# Scintillator
+s:Ge/Scintillator/Type = "TsBox"
+s:Ge/Scintillator/Parent = "World"
+s:Ge/Scintillator/Material = "PVT"
+d:Ge/Scintillator/HLX = 19.5 mm # Half Length
+d:Ge/Scintillator/HLY = 49.5 mm # Half length
+d:Ge/Scintillator/HLZ = 125. mm
+d:Ge/Scintillator/TransX = Ge/Scintillator/HLX mm
+d:Ge/Scintillator/TransY = Ge/Scintillator/HLY mm
+d:Ge/Scintillator/TransZ = Ge/Scintillator/HLZ mm
+#i:Ge/Scintillator/XBins = 39 # 2 * Ge/Scintillator/HLX
+#i:Ge/Scintillator/YBins = 99 # 2 * Ge/Scintillator/HLY
+#i:Ge/Scintillator/ZBins = 250 # 2 * Ge/Scintillator/HLZ
+
+
+# Beam position
+s:Ge/BeamPosition/Parent = "World"
+s:Ge/BeamPosition/Type = "Group"
+d:Ge/BeamPosition/TransX = Ge/Scintillator/HLX mm
+d:Ge/BeamPosition/TransY = Ge/Scintillator/HLY mm
+d:Ge/BeamPosition/TransZ =  -0.82 m
+d:Ge/BeamPosition/RotX = 0. deg
+d:Ge/BeamPosition/RotY = 0. deg
+d:Ge/BeamPosition/RotZ = 0. deg
+
+# Particle source
+s:So/ProtonBeam/Type = "Beam" # Beam, Isotropic, Emittance or PhaseSpace
+s:So/ProtonBeam/Component = "BeamPosition"
+s:So/ProtonBeam/BeamParticle = "proton"
+d:So/ProtonBeam/BeamEnergy = 150.0 MeV
+u:So/ProtonBeam/BeamEnergySpread = 0.12
+s:So/ProtonBeam/BeamPositionDistribution = "Gaussian" # Flat or Gaussian
+s:So/ProtonBeam/BeamPositionCutoffShape = "Ellipse" # Point, Ellipse, Rectangle or Isotropic
+d:So/ProtonBeam/BeamPositionCutoffX = 10. cm
+d:So/ProtonBeam/BeamPositionCutoffY = 10. cm
+d:So/ProtonBeam/BeamPositionSpreadX = 0.5 cm
+d:So/ProtonBeam/BeamPositionSpreadY = 0.5 cm
+s:So/ProtonBeam/BeamAngularDistribution = "Gaussian" # Flat or Gaussian
+d:So/ProtonBeam/BeamAngularCutoffX = 90. deg
+d:So/ProtonBeam/BeamAngularCutoffY = 90. deg
+d:So/ProtonBeam/BeamAngularSpreadX = 0.0032 rad
+d:So/ProtonBeam/BeamAngularSpreadY = 0.0032 rad
+
+## GEOMETRY ###############################
+
+############################### PHYSICS_LISTS ##
+
+s:Ph/ListName = "Default"
+b:Ph/ListProcesses = "False" # Set true to dump list of active physics processes to console
+s:Ph/Default/Type = "Geant4_Modular"
+sv:Ph/Default/Modules = 6 "g4em-standard_opt4" "g4h-phy_QGSP_BIC_HP" "g4decay" "g4ion-binarycascade" "g4h-elastic_HP" "g4stopping"
+d:Ph/Default/EMRangeMin = 100. eV
+d:Ph/Default/EMRangeMax = 500. MeV
+
+## PHYSICS_LISTS ###############################
+
+############################### Scoring ##
+s:Sc/ConvergenceTesting_150MeV_slicing/Quantity = "EnergyDeposit"
+s:Sc/ConvergenceTesting_150MeV_slicing/Component = "Scintillator"
+s:Sc/ConvergenceTesting_150MeV_slicing/IfOutputFileAlreadyExists = "Overwrite"
+b:Sc/ConvergenceTesting_150MeV_slicing/OutputToConsole = "False"
+sv:Sc/ConvergenceTesting_150MeV_slicing/OnlyIncludeParticlesNamed = 1 "proton"
+# i:Sc/ConvergenceTesting_150MeV_slicing/XBins = 78 #2*39
+# i:Sc/ConvergenceTesting_150MeV_slicing/YBins = 198 #2*99
+i:Sc/ConvergenceTesting_150MeV_slicing/ZBins = 500 #2*250
+
+## SCORING ###############################

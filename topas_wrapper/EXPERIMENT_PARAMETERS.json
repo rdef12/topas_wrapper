@@ -1,0 +1,5 @@
+{
+  "number_of_threads": 1,
+  "numbers_of_histories": [1,2,3,4],
+  "proton_beam_energies": [70, 130, 150]
+}
