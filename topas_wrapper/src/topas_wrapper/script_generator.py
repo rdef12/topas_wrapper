@@ -2,9 +2,8 @@ import os
 import subprocess
 import json
 from topas_wrapper.get_data import load_experiment_parameters, load_experiment_geometry_text
-
-def generate_file_structure():
-    return
+from topas_wrapper.create_file_structure import create_file_structure
+from topas_wrapper.file_structure import FileStructure
 
 def generate_number_of_threads_text(number_of_threads: int) -> str:
     if number_of_threads is None:
@@ -17,8 +16,12 @@ def generate_number_of_threads_text(number_of_threads: int) -> str:
 
 def main():
     experiment_parameters = load_experiment_parameters()
-    print(experiment_parameters)
-    print(experiment_parameters.numbers_of_histories)
+    # print(experiment_parameters)
+    # print(experiment_parameters.numbers_of_histories)
+    create_file_structure(experiment_parameters.experiment_name,
+                            FileStructure.EXPERIMENTS.value,
+                            overwrite=experiment_parameters.overwrite_existing_experiment)
+    
     return
 
 if __name__ == "__main__":

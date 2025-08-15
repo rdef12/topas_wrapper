@@ -3,6 +3,7 @@ from typing import List, Type
 from dataclasses import dataclass
 from pydantic import BaseModel, model_validator, ValidationError
 import tomli
+from topas_wrapper.file_structure import FileStructure
 
 from topas_wrapper.input_constants import (EnergyUnit,
                                            LengthUnit,
@@ -16,9 +17,6 @@ from topas_wrapper.input_constants import (EnergyUnit,
                                            PhysicsListType,
                                            ScorerQuantity,
                                            ParticleType)
-
-RELATIVE_EXPERIMENT_GEOMETRY_PATH = "../../EXPERIMENT_GEOMETRY.txt"
-RELATIVE_EXPERIMENT_PARAMETER_PATH = "../../EXPERIMENT_PARAMETERS.toml"
 
 @dataclass
 class ParticleSource(BaseModel):
@@ -107,7 +105,7 @@ class ExperimentParameters(BaseModel):
             return cls.model_validate(data)
 
 
-def locate_experiment_file(relative_filepath: str) -> Path:
+def locate_experiment_config_file(relative_filepath: str) -> Path:
     mod_path = Path(__file__).parent
     absolute_path = (mod_path / relative_filepath).resolve()
     if not absolute_path.exists():
@@ -117,7 +115,7 @@ def locate_experiment_file(relative_filepath: str) -> Path:
 
 def load_experiment_geometry_text() -> List[str]:
     try:
-        experiment_geometry_path = locate_experiment_file(RELATIVE_EXPERIMENT_GEOMETRY_PATH)
+        experiment_geometry_path = locate_experiment_config_file(FileStructure.GEOMETRY.value)
     except FileNotFoundError as e:
         raise FileNotFoundError(f"EXPERIMENT_GEOMETRY.txt does not exist in the expected location. \n{e} \nRefer to the original file structure.")
     geometry_lines = experiment_geometry_path.read_text().splitlines()    
@@ -126,7 +124,7 @@ def load_experiment_geometry_text() -> List[str]:
 
 def load_experiment_parameters() -> ExperimentParameters:
     try:
-        experiment_parameters_path = locate_experiment_file(RELATIVE_EXPERIMENT_PARAMETER_PATH)
+        experiment_parameters_path = locate_experiment_config_file(FileStructure.PARAMETERS.value)
     except FileNotFoundError as e:
         raise FileNotFoundError(f"EXPERIMENT_PARAMETER.txt does not exist in the expected location. \n{e} \nRefer to the original file structure.")
     experiment_parameters = ExperimentParameters.from_toml(experiment_parameters_path)
